@@ -4,7 +4,7 @@ import 'package:sides/models/question.dart';
 
 main() {
   test('Test null question options', () {
-    var q = Question()
+    final q = Question()
       ..name = 'Hello, World!'
       ..category = 'Category X';
 
@@ -12,7 +12,7 @@ main() {
   });
 
   test('Test question votes', () {
-    var q = Question()
+    final q = Question()
       ..name = 'Hello, World!'
       ..category = 'Category X';
 
