@@ -6,6 +6,6 @@ class Entity {
   Entity.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     email = json['email'];
-    email = json['name'];
+    name = json['name'];
   }
 }

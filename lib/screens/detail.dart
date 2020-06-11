@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:random_color/random_color.dart';
 import 'package:share/share.dart';
 import 'package:sides/models/option.dart';
 import 'package:sides/utils/net.dart' as net;
@@ -11,7 +11,6 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class QuestionDetail extends StatefulWidget {
   final _question;
-  final _color = RandomColor().randomColor();
 
   QuestionDetail(this._question);
 
@@ -21,9 +20,7 @@ class QuestionDetail extends StatefulWidget {
 
 class _QuestionDetailState extends State<QuestionDetail> {
   Question _question;
-
-  // O IMEI já votou?
-  bool _cliked = false;
+  bool clicked = false;
 
   _QuestionDetailState(this._question);
 
@@ -37,7 +34,7 @@ class _QuestionDetailState extends State<QuestionDetail> {
   Widget build(BuildContext context) => Scaffold(
           body: CustomScrollView(slivers: <Widget>[
         SliverAppBar(
-          backgroundColor: widget._color,
+          backgroundColor: Theme.of(context).primaryColor,
           forceElevated: true,
           elevation: 8.0,
           flexibleSpace: Padding(
@@ -49,25 +46,29 @@ class _QuestionDetailState extends State<QuestionDetail> {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Container(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.black.withOpacity(0.5),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
                             _question.name,
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headline5,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline5
+                                .copyWith(color: Colors.white),
                           ),
                         ),
                       ),
                     ),
                     if (_question.description != null)
                       Container(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.black.withOpacity(0.5),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
                             _question.description,
                             textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       )
@@ -97,34 +98,53 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
       ]));
 
   Widget _buildTile(context, Option option, index) {
-    final lineWidth = MediaQuery.of(context).size.width * 0.55;
+    final lineWidth = MediaQuery.of(context).size.width * 0.65;
     return ListTile(
       title: Text('${index + 1}. ${option.name}'),
-      subtitle: (this._cliked)
-          ? LinearPercentIndicator(
-              padding: EdgeInsets.all(2.5),
-              animation: true,
-              width: lineWidth,
-              lineHeight: 5.0,
-              percent: option.votes / _question.votes,
-              backgroundColor: Colors.grey,
-              progressColor: widget._color,
+      subtitle: (!clicked)
+          ? Padding(
+              padding: EdgeInsets.only(
+                top: 10.0,
+                left: 2.5,
+              ),
+              child: SizedBox(width: lineWidth, height: 5.0),
             )
-          : null,
-      trailing: (this._cliked)
-          ? Container(
-              color: widget._color,
+          : Padding(
+              padding: EdgeInsets.only(
+                top: 10.0,
+                left: 2.5,
+              ),
+              child: LinearPercentIndicator(
+                padding: EdgeInsets.all(0.0),
+                animation: true,
+                width: lineWidth,
+                lineHeight: 5.0,
+                percent: option.votes / _question.votes,
+                backgroundColor: Colors.grey,
+                progressColor: Theme.of(context).primaryColor,
+              ),
+            ),
+      trailing: (!clicked)
+          ? SizedBox(width: 35.0, height: 35.0)
+          : Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).primaryColor,
+              ),
+              width: 35.0,
+              height: 35.0,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  '${option.votes}',
-                  style: Theme.of(context).textTheme.overline.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                child: Center(
+                  child: Text(
+                    '${option.votes}',
+                    style: Theme.of(context).textTheme.overline.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
-              ))
-          : null,
+              )),
       onTap: () => _vote(context, option),
     );
   }
@@ -135,8 +155,8 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
       final question = await net.vote(option.id);
 
       setState(() {
+        clicked = true;
         this._question = question;
-        this._cliked = true;
       });
 
       Fluttertoast.showToast(
@@ -146,6 +166,11 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
     } on SocketException catch (_) {
       Fluttertoast.showToast(
           msg: 'Não é possível estabelecer a ligação a rede.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER);
+    } on PlatformException catch (_) {
+      Fluttertoast.showToast(
+          msg: 'É necessário dar permissão de leitura do ID do dispositivo.',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER);
     }

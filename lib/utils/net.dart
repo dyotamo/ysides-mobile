@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:device_id/device_id.dart';
 import 'package:http/http.dart' as http;
-import 'package:imei_plugin/imei_plugin.dart';
 import 'package:sides/models/question.dart';
 
 final host = 'https://ysides.herokuapp.com';
@@ -19,7 +19,7 @@ Future<Question> getQuestion(questionId) async {
 }
 
 Future<Question> vote(optionId) async {
-  final imei = await ImeiPlugin.getImei();
+  final imei = await DeviceId.getIMEI;
 
   Map<String, String> headers = {
     'Content-type': 'application/json',

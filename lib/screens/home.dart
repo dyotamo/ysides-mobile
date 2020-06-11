@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:shimmer/shimmer.dart';
@@ -25,14 +28,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: Text('Opine aqui!'),
+        title: Text('Escolha o seu lado!'),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.search), onPressed: () {})
+          IconButton(icon: Icon(Icons.search), onPressed: () {}),
+          IconButton(
+              icon: Icon(Icons.perm_device_information),
+              onPressed: () => _showDisclaimer(context))
         ],
       ),
-      body: questions != null ? _buildList(context) : _buildLoading(context));
+      body: (questions != null)
+          ? (questions.isEmpty ? _buildNoData() : _buildList(context))
+          : _buildLoading(context));
+
+  Widget _buildNoData() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            Entypo.trash,
+            size: 75.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Text(
+              'Sem dados',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   Widget _buildList(context) => GroupedListView<Question, String>(
+      separator: Divider(),
       elements: this.questions,
       groupBy: (question) => question.category,
       groupSeparatorBuilder: (category) => Padding(
@@ -49,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.only(bottom: 5.0),
           child: Text(question.name),
         ),
-        subtitle: Text('Postado por ${question.entity.email}'),
+        subtitle: Text('Postado por ${question.entity.name}'),
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (context) => QuestionDetail(question))),
       );
@@ -97,5 +127,15 @@ class _HomeScreenState extends State<HomeScreen> {
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER);
     }
+  }
+
+  void _showDisclaimer(context) {
+    showCupertinoDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: Text('Info'),
+              content: Text('Para garantir que a sua opinião seja válida, ' +
+                  'o Sides necessita do ID do dispositivo.'),
+            ));
   }
 }
