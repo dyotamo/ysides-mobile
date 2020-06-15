@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shake/shake.dart';
 import 'package:share/share.dart';
 import 'package:sides/models/option.dart';
 import 'package:sides/utils/net.dart' as net;
@@ -20,14 +21,17 @@ class QuestionDetail extends StatefulWidget {
 
 class _QuestionDetailState extends State<QuestionDetail> {
   Question _question;
-  bool clicked = false;
+
+  /// Clicked?
+  bool isDaisy = false;
 
   _QuestionDetailState(this._question);
 
   @override
   void initState() {
-    _updateQuestion();
     super.initState();
+    _updateQuestion();
+    _initShakeEvent();
   }
 
   @override
@@ -99,9 +103,11 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
 
   Widget _buildTile(context, Option option, index) {
     final lineWidth = MediaQuery.of(context).size.width * 0.65;
+    final percent = ((option.votes / _question.votes) * 100).toStringAsFixed(0);
+
     return ListTile(
       title: Text('${index + 1}. ${option.name}'),
-      subtitle: (!clicked)
+      subtitle: (!isDaisy)
           ? Padding(
               padding: EdgeInsets.only(
                 top: 10.0,
@@ -115,6 +121,16 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
                 left: 2.5,
               ),
               child: LinearPercentIndicator(
+                leading: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Container(
+                    width: 25,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$percent%'),
+                    ),
+                  ),
+                ),
                 padding: EdgeInsets.all(0.0),
                 animation: true,
                 width: lineWidth,
@@ -124,27 +140,6 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
                 progressColor: Theme.of(context).primaryColor,
               ),
             ),
-      trailing: (!clicked)
-          ? SizedBox(width: 35.0, height: 35.0)
-          : Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context).primaryColor,
-              ),
-              width: 35.0,
-              height: 35.0,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Center(
-                  child: Text(
-                    '${option.votes}',
-                    style: Theme.of(context).textTheme.overline.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-              )),
       onTap: () => _vote(context, option),
     );
   }
@@ -155,7 +150,7 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
       final question = await net.vote(option.id);
 
       setState(() {
-        clicked = true;
+        isDaisy = true;
         this._question = question;
       });
 
@@ -181,4 +176,8 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
     final question = await net.getQuestion(widget._question.id);
     if (mounted) setState(() => this._question = question);
   }
+
+  void _initShakeEvent() => ShakeDetector.autoStart(onPhoneShake: () {
+        setState(() => isDaisy = !isDaisy);
+      });
 }

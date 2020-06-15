@@ -7,7 +7,7 @@ void main() {
   runApp(MaterialApp(
     home: HomeScreen(),
     theme: ThemeData(
-      primarySwatch: Colors.teal,
+      primarySwatch: Colors.blueGrey,
       textTheme: GoogleFonts.latoTextTheme(),
     ),
   ));

@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String title = 'Carregando questões...';
   List<Question> questions;
 
   @override
@@ -28,17 +29,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: Text('Escolha o seu lado!'),
+        title: Text(title),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.search), onPressed: () {}),
           IconButton(
-              icon: Icon(Icons.perm_device_information),
+              icon: Icon(Entypo.info),
               onPressed: () => _showDisclaimer(context))
         ],
       ),
       body: (questions != null)
           ? (questions.isEmpty ? _buildNoData() : _buildList(context))
-          : _buildLoading(context));
+          : _buildLoading());
 
   Widget _buildNoData() {
     return Center(
@@ -84,44 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (context) => QuestionDetail(question))),
       );
 
-  Widget _buildLoading(context) {
-    var mediaQuery = MediaQuery.of(context);
-
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(2.5),
-        child: Shimmer.fromColors(
-          baseColor: Colors.grey[300],
-          highlightColor: Colors.grey[100],
-          child: ListView.builder(
-            itemBuilder: (_, __) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: ListTile(
-                title: Container(
-                  width: double.infinity,
-                  height: 8.0,
-                  color: Colors.white,
-                ),
-                subtitle: Container(
-                  width: mediaQuery.size.width * 0.5,
-                  height: 8.0,
-                  color: Colors.white,
-                ),
-              ),
+  Widget _buildLoading() => Shimmer.fromColors(
+        baseColor: Colors.grey[300],
+        highlightColor: Colors.grey[100],
+        child: ListView.builder(
+          itemBuilder: (_, __) => ListTile(
+            title: Container(
+              height: 8.0,
+              color: Colors.white,
             ),
-            itemCount: 12,
+            subtitle: Container(
+              height: 8.0,
+              color: Colors.white,
+            ),
           ),
+          itemCount: 5,
         ),
-      ),
-    );
-  }
+      );
 
   Future<void> _getQuestions() async {
     try {
       final questions = await net.getQuestions();
-      this.setState(() => this.questions = questions);
+      this.setState(() {
+        this.questions = questions;
+        title = 'Sides';
+      });
     } on SocketException catch (_) {
-      this.setState(() => questions = []);
+      this.setState(() {
+        questions = [];
+        title = 'Sides';
+      });
       Fluttertoast.showToast(
           msg: 'Não é possível estabelecer a ligação a rede.',
           toastLength: Toast.LENGTH_SHORT,
@@ -132,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showDisclaimer(context) {
     showCupertinoDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => CupertinoAlertDialog(
               title: Text('Info'),
               content: Text('Para garantir que a sua opinião seja válida, ' +
                   'o Sides necessita do ID do dispositivo.'),
