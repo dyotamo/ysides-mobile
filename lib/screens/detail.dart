@@ -1,14 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:shake/shake.dart';
 import 'package:share/share.dart';
 import 'package:sides/models/option.dart';
-import 'package:sides/utils/net.dart' as net;
 import 'package:sides/models/question.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:sides/utils/net.dart' as net;
 
 class QuestionDetail extends StatefulWidget {
   final _question;
@@ -93,20 +92,17 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
         SliverList(
             delegate: SliverChildListDelegate(
           _question.options
-              .asMap()
-              .map((index, option) =>
-                  MapEntry(index, _buildTile(context, option, index)))
-              .values
+              .map((option) => _buildTile(context, option))
               .toList(),
         )),
       ]));
 
-  Widget _buildTile(context, Option option, index) {
-    final lineWidth = MediaQuery.of(context).size.width * 0.65;
+  Widget _buildTile(context, Option option) {
+    final lineWidth = MediaQuery.of(context).size.width * 0.75;
     final percent = ((option.votes / _question.votes) * 100).toStringAsFixed(0);
 
     return ListTile(
-      title: Text('${index + 1}. ${option.name}'),
+      title: Text(option.name),
       subtitle: (!isDaisy)
           ? Padding(
               padding: EdgeInsets.only(
@@ -124,7 +120,7 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
                 leading: Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: Container(
-                    width: 25,
+                    width: 40.0,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text('$percent%'),
@@ -161,11 +157,6 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
     } on SocketException catch (_) {
       Fluttertoast.showToast(
           msg: 'Não é possível estabelecer a ligação a rede.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER);
-    } on PlatformException catch (_) {
-      Fluttertoast.showToast(
-          msg: 'É necessário dar permissão de leitura do ID do dispositivo.',
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER);
     }

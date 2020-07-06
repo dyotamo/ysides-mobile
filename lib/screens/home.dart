@@ -48,11 +48,12 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(
             Entypo.trash,
             size: 75.0,
+            color: Theme.of(context).primaryColor,
           ),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text(
-              'Sem dados',
+              'Sem perguntas',
               style: Theme.of(context).textTheme.headline4,
             ),
           )
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.white,
             ),
           ),
-          itemCount: 5,
+          itemCount: 15,
         ),
       );
 
@@ -112,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } on SocketException catch (_) {
       this.setState(() {
         questions = [];
-        title = 'Sides';
+        title = 'Sem perguntas';
       });
       Fluttertoast.showToast(
           msg: 'Não é possível estabelecer a ligação a rede.',

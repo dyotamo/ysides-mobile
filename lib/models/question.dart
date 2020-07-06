@@ -11,7 +11,7 @@ class Question {
 
   Question();
 
-  get votes =>
+  int get votes =>
       options.fold<int>(0, (prev, currentOption) => prev + currentOption.votes);
 
   Question.fromJson(Map<String, dynamic> json) {
