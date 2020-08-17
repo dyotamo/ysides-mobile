@@ -1,44 +1,48 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_list/grouped_list.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:sides/models/question.dart';
 import 'package:sides/screens/detail.dart';
-import 'package:sides/utils/net.dart' as net;
+import 'package:sides/utils/net.dart';
 
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  String title = 'Carregando questões...';
-  List<Question> questions;
-
-  @override
-  void initState() {
-    super.initState();
-    _getQuestions();
-  }
-
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text('Escolha o seu lado'),
         actions: <Widget>[
           IconButton(
-              icon: Icon(Entypo.info),
-              onPressed: () => _showDisclaimer(context))
+            icon: Icon(Icons.info),
+            onPressed: () => _showDisclaimer(context),
+          )
         ],
       ),
-      body: (questions != null)
-          ? (questions.isEmpty ? _buildNoData() : _buildList(context))
-          : _buildLoading());
+      body: FutureBuilder<List<Question>>(
+          future: getQuestions(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              var questions = snapshot.data;
+              if (questions.isEmpty) return _buildNoData();
+              return _buildList(context, questions);
+            } else if (snapshot.hasError) return _buildError();
+            return _buildLoading();
+          }));
+
+  Widget _buildError() {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 50.0,
+          ),
+          SizedBox(width: 5.0),
+          Text('Oops, problemas de conexão.'),
+        ],
+      ),
+    );
+  }
 
   Widget _buildNoData() {
     return Center(
@@ -46,34 +50,31 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Icon(
-            Entypo.trash,
+            Icons.clear,
             size: 75.0,
-            color: Theme.of(context).primaryColor,
+            color: Colors.grey,
           ),
           Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Text(
-              'Sem perguntas',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Oops! Sem enquetes...'),
           )
         ],
       ),
     );
   }
 
-  Widget _buildList(context) => GroupedListView<Question, String>(
-      separator: Divider(),
-      elements: this.questions,
-      groupBy: (question) => question.category,
-      groupSeparatorBuilder: (category) => Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Text(
-              category,
-              style: Theme.of(context).textTheme.headline5,
-            ),
-          ),
-      itemBuilder: (context, question) => _buildTile(context, question));
+  Widget _buildList(context, List<Question> questions) =>
+      GroupedListView<Question, String>(
+          elements: questions,
+          groupBy: (question) => question.category,
+          groupSeparatorBuilder: (category) => Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  category,
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+              ),
+          itemBuilder: (context, question) => _buildTile(context, question));
 
   Widget _buildTile(context, Question question) => ListTile(
         title: Padding(
@@ -85,48 +86,24 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (context) => QuestionDetail(question))),
       );
 
-  Widget _buildLoading() => Shimmer.fromColors(
-        baseColor: Colors.grey[300],
-        highlightColor: Colors.grey[100],
-        child: ListView.builder(
-          itemBuilder: (_, __) => ListTile(
-            title: Container(
-              height: 8.0,
-              color: Colors.white,
-            ),
-            subtitle: Container(
-              height: 8.0,
-              color: Colors.white,
-            ),
-          ),
-          itemCount: 15,
+  Widget _buildLoading() => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            Padding(
+              padding: const EdgeInsets.all(8.5),
+              child: Text('Carregando enquetes...'),
+            )
+          ],
         ),
       );
-
-  Future<void> _getQuestions() async {
-    try {
-      final questions = await net.getQuestions();
-      this.setState(() {
-        this.questions = questions;
-        title = 'Sides';
-      });
-    } on SocketException catch (_) {
-      this.setState(() {
-        questions = [];
-        title = 'Sem perguntas';
-      });
-      Fluttertoast.showToast(
-          msg: 'Não é possível estabelecer a ligação a rede.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER);
-    }
-  }
 
   void _showDisclaimer(context) {
     showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
-              title: Text('Info'),
+              title: Text('Importante'),
               content: Text('Para garantir que a sua opinião seja válida, ' +
                   'o Sides necessita do ID do dispositivo.'),
             ));

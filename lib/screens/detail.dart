@@ -24,6 +24,9 @@ class _QuestionDetailState extends State<QuestionDetail> {
   /// Clicked?
   bool isDaisy = false;
 
+  /// Show progressing indicator while voting
+  bool voting = false;
+
   _QuestionDetailState(this._question);
 
   @override
@@ -85,7 +88,7 @@ class _QuestionDetailState extends State<QuestionDetail> {
                 icon: Icon(Icons.share),
                 onPressed: () => Share.share('''${_question.name}
 
-Diga-nos o que tu achas, pelo aplicativo Sides.''')),
+Veja o que o público pensa a respeito pelo aplicativo Sides.''')),
           ],
           expandedHeight: 250.0,
         ),
@@ -98,7 +101,7 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
       ]));
 
   Widget _buildTile(context, Option option) {
-    final lineWidth = MediaQuery.of(context).size.width * 0.75;
+    final lineWidth = MediaQuery.of(context).size.width * 0.65;
     final percent = ((option.votes / _question.votes) * 100).toStringAsFixed(0);
 
     return ListTile(
@@ -142,6 +145,10 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
 
   void _vote(context, option) async {
     try {
+      setState(() {
+        this.voting = true;
+      });
+
       // Tenta votar e actualiza o estado da questão
       final question = await net.vote(option.id);
 
@@ -153,12 +160,16 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
       Fluttertoast.showToast(
           msg: 'Obrigado pela opinião',
           toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER);
+          gravity: ToastGravity.BOTTOM);
     } on SocketException catch (_) {
       Fluttertoast.showToast(
-          msg: 'Não é possível estabelecer a ligação a rede.',
+          msg: 'Problema temporário de rede.',
           toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER);
+          gravity: ToastGravity.BOTTOM);
+    } finally {
+      setState(() {
+        this.voting = false;
+      });
     }
   }
 
@@ -169,6 +180,6 @@ Diga-nos o que tu achas, pelo aplicativo Sides.''')),
   }
 
   void _initShakeEvent() => ShakeDetector.autoStart(onPhoneShake: () {
-        setState(() => isDaisy = !isDaisy);
+        if (mounted) setState(() => isDaisy = !isDaisy);
       });
 }
